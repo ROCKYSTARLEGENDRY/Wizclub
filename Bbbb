@@ -1,0 +1,117 @@
+
+
+```javascript
+let score = 0;
+const scoreDisplay = document.getElementById("scoreDisplay");
+const mario = document.getElementById("mario");
+const obstacles = document.querySelectorAll(".obstacle");
+const platforms = document.querySelectorAll(".platform");
+const mysteryBoxes = document.querySelectorAll(".mystery-box");
+
+let jumping = false;
+let jumpingInterval;
+let jumpingHeight = 150;
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowRight") {
+        moveRight();
+    } else if (event.key === "ArrowLeft") {
+        moveLeft();
+    } else if (event.key === "ArrowUp" && !jumping) {
+        jump();
+    }
+});
+
+function moveRight() {
+    let currentPosition = parseInt(window.getComputedStyle(mario).getPropertyValue("left")) || 0;
+    mario.style.left = (currentPosition + 10) + "px";
+    checkCollision();
+}
+
+function moveLeft() {
+    let currentPosition = parseInt(window.getComputedStyle(mario).getPropertyValue("left")) || 0;
+    mario.style.left = (currentPosition - 10) + "px";
+    checkCollision();
+}
+
+function jump() {
+    jumping = true;
+    jumpingInterval = setInterval(function() {
+        let currentPosition = parseInt(window.getComputedStyle(mario).getPropertyValue("bottom")) || 0;
+        if (currentPosition < jumpingHeight) {
+            mario.style.bottom = (currentPosition + 10) + "px";
+        } else {
+            clearInterval(jumpingInterval);
+            falling();
+        }
+    }, 30);
+}
+
+function falling() {
+    let fallingInterval = setInterval(function() {
+        let currentPosition = parseInt(window.getComputedStyle(mario).getPropertyValue("bottom")) || 0;
+        if (currentPosition > 0) {
+            mario.style.bottom = (currentPosition - 10) + "px";
+        } else {
+            clearInterval(fallingInterval);
+            jumping = false;
+        }
+    }, 30);
+}
+
+function checkCollision() {
+    let marioRect = mario.getBoundingClientRect();
+
+    // Check collision with obstacles
+    obstacles.forEach(obstacle => {
+        let obstacleRect = obstacle.getBoundingClientRect();
+        if (marioRect.right > obstacleRect.left &&
+            marioRect.left < obstacleRect.right &&
+            marioRect.bottom > obstacleRect.top &&
+            marioRect.top < obstacleRect.bottom) {
+            if (obstacle.classList.contains("pit")) {
+                gameOver();
+            }
+        }
+    });
+
+    // Check collision with platforms
+    let onPlatform = false;
+    platforms.forEach(platform => {
+        let platformRect = platform.getBoundingClientRect();
+        if (marioRect.right > platformRect.left &&
+            marioRect.left < platformRect.right &&
+            marioRect.bottom > platformRect.top &&
+            marioRect.top < platformRect.bottom) {
+            onPlatform = true;
+        }
+    });
+
+    if (!onPlatform) {
+        falling();
+    }
+
+    // Check collision with mystery boxes
+    mysteryBoxes.forEach(box => {
+        let boxRect = box.getBoundingClientRect();
+        if (marioRect.right > boxRect.left &&
+            marioRect.left < boxRect.right &&
+            marioRect.bottom > boxRect.top &&
+            marioRect.top < boxRect.bottom) {
+            box.style.display = "none";
+            let randomNumber = Math.random();
+            if (randomNumber < 0.5) {
+                score += 25;
+                scoreDisplay.innerText = "Score: " + score;
+            } else {
+                gameOver();
+            }
+        }
+    });
+}
+
+function gameOver() {
+    alert("Game Over!");
+    location.reload(); // Restart the game
+}
+```
